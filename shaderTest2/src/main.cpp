@@ -23,6 +23,30 @@
 #define GL_LOG_FILE "gl.log"
 
 
+GLfloat matrix[] = {
+	1.0f, 0.0f, 0.0f, 0.0f, // first column
+	0.0f, 1.0f, 0.0f, 0.0f, // second column
+	0.0f, 0.0f, 1.0f, 0.0f, // third column
+	0.5f, 0.0f, 0.0f, 1.0f // fourth column
+};
+
+	/* OTHER STUFF GOES HERE NEXT */
+GLfloat points[] = {
+	 0.0f,	0.5f,	0.0f,
+	 0.5f, -0.5f,	0.0f,
+	-0.5f, -0.5f,	0.0f
+};
+
+GLfloat colours[] = {
+	1.0f, 0.0f,  0.0f,
+	0.0f, 1.0f,  0.0f,
+	0.0f, 0.0f,  1.0f
+};
+
+int matrix_location;
+GLuint vao;
+GLuint shader_programme;
+
 bool parse_file_into_str (
 	const char* file_name, char* shader_str, int max_len
 ) {
@@ -54,6 +78,80 @@ bool parse_file_into_str (
 	return true;
 }
 
+GLuint Program(std::string vertexSource, std::string fragSource)
+{
+
+	//DECLARE DATA BUFFERS TO SEND TO GPU
+	GLuint points_vbo;
+	glGenBuffers (1, &points_vbo);
+	glBindBuffer (GL_ARRAY_BUFFER, points_vbo);
+	glBufferData (GL_ARRAY_BUFFER, 9 * sizeof (GLfloat), points, GL_STATIC_DRAW);
+	
+	GLuint colours_vbo;
+	glGenBuffers (1, &colours_vbo);
+	glBindBuffer (GL_ARRAY_BUFFER, colours_vbo);
+	glBufferData (GL_ARRAY_BUFFER, 9 * sizeof (GLfloat), colours, GL_STATIC_DRAW);
+	
+
+	//ALLOCATE DATA BUFFERS TO SEND TO GPU
+	glGenVertexArrays (1, &vao);
+	glBindVertexArray (vao);
+	glBindBuffer (GL_ARRAY_BUFFER, points_vbo);
+	glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glBindBuffer (GL_ARRAY_BUFFER, colours_vbo);
+	glVertexAttribPointer (1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray (0);
+	glEnableVertexAttribArray (1);
+
+
+	// CREATE SHARDERS	
+	char vertex_shader[1024 * 256];
+	assert (parse_file_into_str (vertexSource.c_str(), vertex_shader, 1024 * 256));
+	GLuint vs = glCreateShader (GL_VERTEX_SHADER);
+	const GLchar* p = (const GLchar*)vertex_shader;
+	glShaderSource (vs, 1, &p, NULL);
+	glCompileShader (vs);
+	
+	
+	char fragment_shader[1024 * 256];
+	assert (parse_file_into_str (fragSource.c_str(), fragment_shader, 1024 * 256));
+	GLuint fs = glCreateShader (GL_FRAGMENT_SHADER);
+	p = (const GLchar*)fragment_shader;
+	glShaderSource (fs, 1, &p, NULL);
+	glCompileShader (fs);
+	
+
+	// ATTACH SHADER TO PIPELINE
+	shader_programme = glCreateProgram ();
+	glAttachShader (shader_programme, fs);
+	glAttachShader (shader_programme, vs);
+	glLinkProgram (shader_programme);
+
+
+	//PARAMETERS
+	glEnable (GL_CULL_FACE); // cull face
+	glCullFace (GL_BACK); // cull back face
+	glFrontFace (GL_CW); // GL_CCW for counter clock-wise
+
+	return shader_programme;
+
+}
+
+
+void ProgramBegin()
+{
+	matrix_location = glGetUniformLocation (shader_programme, "matrix");
+	
+	// Note: this call is not necessary, but I like to do it anyway before any
+	// time that I call glDrawArrays() so I never use the wrong shader programme
+	glUseProgram (shader_programme);
+
+	// Note: this call is related to the most recently 'used' shader programme
+	glUniformMatrix4fv (matrix_location, 1, GL_FALSE, matrix);
+
+}
+
+
 
 
 int main () {
@@ -76,102 +174,9 @@ int main () {
 	glEnable (GL_DEPTH_TEST); // enable depth-testing
 	glDepthFunc (GL_LESS); // depth-testing interprets a smaller value as "closer"
 
-	/* OTHER STUFF GOES HERE NEXT */
-	GLfloat points[] = {
-		 0.0f,	0.5f,	0.0f,
-		 0.5f, -0.5f,	0.0f,
-		-0.5f, -0.5f,	0.0f
-	};
-	
-	GLfloat colours[] = {
-		1.0f, 0.0f,  0.0f,
-		0.0f, 1.0f,  0.0f,
-		0.0f, 0.0f,  1.0f
-	};
-	
-	GLuint points_vbo;
-	glGenBuffers (1, &points_vbo);
-	glBindBuffer (GL_ARRAY_BUFFER, points_vbo);
-	glBufferData (GL_ARRAY_BUFFER, 9 * sizeof (GLfloat), points, GL_STATIC_DRAW);
-	
-	GLuint colours_vbo;
-	glGenBuffers (1, &colours_vbo);
-	glBindBuffer (GL_ARRAY_BUFFER, colours_vbo);
-	glBufferData (GL_ARRAY_BUFFER, 9 * sizeof (GLfloat), colours, GL_STATIC_DRAW);
-	
-	GLuint vao;
-	glGenVertexArrays (1, &vao);
-	glBindVertexArray (vao);
-	glBindBuffer (GL_ARRAY_BUFFER, points_vbo);
-	glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glBindBuffer (GL_ARRAY_BUFFER, colours_vbo);
-	glVertexAttribPointer (1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glEnableVertexAttribArray (0);
-	glEnableVertexAttribArray (1);
-	
-	char vertex_shader[1024 * 256];
-	char fragment_shader[1024 * 256];
-	assert (parse_file_into_str ("../src/test_vs.glsl", vertex_shader, 1024 * 256));
-	assert (parse_file_into_str ("../src/test_fs.glsl", fragment_shader, 1024 * 256));
-	
-	GLuint vs = glCreateShader (GL_VERTEX_SHADER);
-	const GLchar* p = (const GLchar*)vertex_shader;
-	glShaderSource (vs, 1, &p, NULL);
-	glCompileShader (vs);
-	
-	// check for compile errors
-	int params = -1;
-	glGetShaderiv (vs, GL_COMPILE_STATUS, &params);
-	if (GL_TRUE != params) {
-		fprintf (stderr, "ERROR: GL shader index %i did not compile\n", vs);
-		//print_shader_info_log (vs);
-		return 1; // or exit or something
-	}
-	
-	GLuint fs = glCreateShader (GL_FRAGMENT_SHADER);
-	p = (const GLchar*)fragment_shader;
-	glShaderSource (fs, 1, &p, NULL);
-	glCompileShader (fs);
-	
-	// check for compile errors
-	glGetShaderiv (fs, GL_COMPILE_STATUS, &params);
-	if (GL_TRUE != params) {
-		fprintf (stderr, "ERROR: GL shader index %i did not compile\n", fs);
-		//print_shader_info_log (fs);
-		return 1; // or exit or something
-	}
-	
-	GLuint shader_programme = glCreateProgram ();
-	glAttachShader (shader_programme, fs);
-	glAttachShader (shader_programme, vs);
-	glLinkProgram (shader_programme);
-	
-	glGetProgramiv (shader_programme, GL_LINK_STATUS, &params);
-	if (GL_TRUE != params) {
-		fprintf (
-			stderr,
-			"ERROR: could not link shader programme GL index %i\n",
-			shader_programme
-		);
-		//print_programme_info_log (shader_programme);
-		return false;
-	}
-	
-	GLfloat matrix[] = {
-		1.0f, 0.0f, 0.0f, 0.0f, // first column
-		0.0f, 1.0f, 0.0f, 0.0f, // second column
-		0.0f, 0.0f, 1.0f, 0.0f, // third column
-		0.5f, 0.0f, 0.0f, 1.0f // fourth column
-	};
-	
 
-	int matrix_location = glGetUniformLocation (shader_programme, "matrix");
-	glUseProgram (shader_programme);
-	glUniformMatrix4fv (matrix_location, 1, GL_FALSE, matrix);
+	shader_programme = Program("../src/test_vs.glsl", "../src/test_fs.glsl");
 	
-	glEnable (GL_CULL_FACE); // cull face
-	glCullFace (GL_BACK); // cull back face
-	glFrontFace (GL_CW); // GL_CCW for counter clock-wise
 
 	bool running = true;
     while (running)
@@ -193,17 +198,10 @@ int main () {
 		// wipe the drawing surface clear
 		glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		//
-		// Note: this call is not necessary, but I like to do it anyway before any
-		// time that I call glDrawArrays() so I never use the wrong shader programme
-		glUseProgram (shader_programme);
+
+		ProgramBegin();
+
 		
-		
-		//
-		// Note: this call is related to the most recently 'used' shader programme
-		glUniformMatrix4fv (matrix_location, 1, GL_FALSE, matrix);
-		
-		//
 		// Note: this call is not necessary, but I like to do it anyway before any
 		// time that I call glDrawArrays() so I never use the wrong vertex data
 		glBindVertexArray (vao);
@@ -215,3 +213,6 @@ int main () {
 	
 	return 0;
 }
+
+
+
