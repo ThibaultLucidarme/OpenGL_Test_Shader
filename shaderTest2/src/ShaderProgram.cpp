@@ -42,6 +42,7 @@ bool ShaderProgram::AddShader(string file, GLenum shaderType)
 	int compileSuccess = -1;
 	glGetShaderiv( shaderID, GL_COMPILE_STATUS, &compileSuccess );
 	if( compileSuccess != GL_TRUE ) cerr<<"ERROR: Could not compile "<<file<<endl;
+	else _attachedShaderList.push_back( shaderID );
 
 
 	// XXX TEMP XXX
@@ -56,7 +57,17 @@ bool ShaderProgram::AddShader(string file, GLenum shaderType)
 ShaderProgram::ShaderProgram()
 {
 	_programID = glCreateProgram();
+}
 
+ShaderProgram::~ShaderProgram()
+{
+	for( GLuint &shaderID : _attachedShaderList )
+	{
+		glDetachShader( _programID, shaderID );
+		glDeleteShader( shaderID );
+	}
+
+    glDeleteProgram( _programID );
 }
 
 
@@ -84,7 +95,6 @@ ShaderProgram* ShaderProgram::SetParameter( string varName, GLfloat* varValue)
 void ShaderProgram::Begin()
 {
 	glUseProgram( _programID );
-	// glBindVertexArray( vao );
 }
 
 void ShaderProgram::End()

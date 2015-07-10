@@ -18,6 +18,11 @@ Mesh::~Mesh()
 {
 
 	//release vbos and vao
+    glDisableVertexAttribArray(0); //attribIndex from Init
+    glDisableVertexAttribArray(1);
+   
+    glDeleteBuffers(2, vbo);
+    glDeleteVertexArrays(1, &vao);
 
 }
 
@@ -37,9 +42,9 @@ void Mesh::LoadToGPU( bool useTexture )
 	};
 
 	//points
-	Init(&_vertices_vbo, points, 9);
+	Init(&_vertices_vbo, points, 9, 0);
 	//color
-	Init(&colours_vbo, colours, 9);
+	Init(&colours_vbo, colours, 9, 1);
 	//normals
 	
 	//uv
@@ -52,17 +57,57 @@ void Mesh::LoadToGPU( bool useTexture )
 }
 
 //rename
-void Mesh::Init( GLuint* vbo, const GLfloat* array, int size)
+void Mesh::SetInput( GLuint* vbo, const GLfloat* array, int size, string varName)
 {
-	static int index = 0;
-	//points
+	/*
+	varLocation is the value of the "layout (location=`varLocation`)" in the vertex shader for the variable varName
+	 
+	 
+	If the layout information is not in the shader then openGL will create a default layout 
+	(usually in order as they appear) or you can define your own binding with 
+	glBindAttribLocation(progam, id, name) before linking.
+
+	You can explicitly get those numbers from id = glGetAttribLocation(program, name); 
+	after linking; the name is the string that appears in the vertex shader for the attribute. 
+	For example if you passed "vertexPosition" for name then you would get 0.
+	
+	
+
+	*/
+	int varLocation = glGetAttribLocation( _programID, varName.c_str() );
+	
+	
+	glGenBuffers( 1, vbo );
+	glBindBuffer( GL_ARRAY_BUFFER, *vbo );
+	glBufferData( GL_ARRAY_BUFFER, size * sizeof (GLfloat), array, GL_STATIC_DRAW);
+	glVertexAttribPointer( varLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray( varLocation );
+}
+
+
+void Mesh::Init( GLuint* vbo, const GLfloat* array, int size, int index)
+{
+	/*
+	index is the value of the "layout (location=`index`)" in the vertex shader for the attribute
+	 
+	 
+	If the layout information is not in the shader then openGL will create a default layout 
+	(usually in order as they appear) or you can define your own binding with 
+	glBindAttribLocation(progam, id, name) before linking.
+
+	You can explicitly get those numbers from id = glGetAttribLocation(program, name); 
+	after linking; the name is the string that appears in the vertex shader for the attribute. 
+	For example if you passed "vertexPosition" for name then you would get 0.
+	
+	
+
+	*/
+	
 	glGenBuffers( 1, vbo );
 	glBindBuffer( GL_ARRAY_BUFFER, *vbo );
 	glBufferData( GL_ARRAY_BUFFER, size * sizeof (GLfloat), array, GL_STATIC_DRAW);
 	glVertexAttribPointer( index, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	glEnableVertexAttribArray( index );
-
-	index++;
 }
 
 void Mesh::Draw()

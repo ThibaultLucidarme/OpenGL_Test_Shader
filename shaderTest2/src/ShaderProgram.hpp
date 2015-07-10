@@ -1,11 +1,14 @@
 #include <SFML/OpenGL.hpp>
 #include <string>
+#include <vector>
+
 
 class ShaderProgram
 {
 private:
 
 	GLuint _programID;
+	std::vector<GLuint> _attachedShaderList;
 
 	std::string ReadFile( std::string filename );
 	bool AddShader( std::string file, GLenum shaderType );
