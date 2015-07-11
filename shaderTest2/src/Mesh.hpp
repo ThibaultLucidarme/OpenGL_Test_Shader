@@ -3,12 +3,13 @@
 
 
 #include <SFML/OpenGL.hpp>
-#include <glm/glm.hpp>
 #include <vector>
 #include <string>
-#include <iostream>
 #include "ShaderProgram.hpp"
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #define MESH_DYNAMIC true
 #define MESH_STATIC false
@@ -21,6 +22,9 @@ private:
 	GLuint _vertices_vbo;
 	std::vector<glm::vec3> _vertices;
 
+	GLuint _colours_vbo;
+	std::vector<glm::vec3> _colours;
+
 	GLuint _normals_vbo;
 	std::vector<glm::vec3> _normals;
 	
@@ -30,14 +34,16 @@ private:
 	GLuint _uv_vbo;
 	std::vector<glm::vec2> _uv;
 
+	std::vector<GLfloat> _flatArray;
 
-	GLuint colours_vbo;
+
 	GLuint _vao;
 
 
-	void Init( GLuint* vbo, const GLfloat* array, int size, int index);
-	void SetInput( GLuint* vbo, const GLfloat* array, int size, std::string varName );
+	void LoadArray( GLuint* vbo, std::vector<glm::vec3>* array, std::string varName);
 	void LoadToGPU( bool useTexture = false );
+
+
 public:
 
 	Mesh();
@@ -45,8 +51,8 @@ public:
 	~Mesh();
 
 	void LoadFromFile( std::string file);
-	void Draw( );
-	Mesh* Move( GLfloat* MVmatrix );
+	void Draw( GLenum mode = GL_TRIANGLES, GLfloat rasterSize = 1.0 );
+	Mesh* Move( glm::mat4 MVmatrix );
 	
 };
 
@@ -62,7 +68,7 @@ class Ship
 {
 private: 
 
-	GLfloat _model[16];
+	glm::mat4 _model;
 	Mesh* _mesh;
 
 
@@ -70,22 +76,14 @@ public:
 
 	Ship()
 	{
-		_model[0] = 1.0f;
-		_model[1] = 0.0f;
-		_model[2] = 0.0f;
-		_model[3] = 0.0f;
-		_model[4] = 0.0f;
-		_model[5] = 1.0f;
-		_model[6] = 0.0f;
-		_model[7] = 0.0f;
-		_model[8] = 0.0f;
-		_model[9] = 0.0f;
-		_model[10] = 1.0f;
-		_model[11] = 0.0f;
-		_model[12] = 0.0f;
-		_model[13] = 0.0f;
-		_model[14] = 0.0f;
-		_model[15] = 1.0f;
+		//If there is a single scalar parameter to a matrix constructor, it is used to initialize all the components on the matrix's diagonal, with the remaining components initialized to 0.0f
+		_model = glm::mat4( 1.0 );
+
+	}
+
+	Ship( std::string filename ) : Ship()
+	{
+		AttachMesh( new Mesh( filename ) );
 	}
 	
 	void AttachMesh( Mesh* mesh )
@@ -98,13 +96,15 @@ public:
 		// Do not call Mesh::Move()
 		// offset it to when Ship::Draw()
 		// This is so that the Ship::Move is independent from the ShaderProgram::Begin context 
-		_model[1] = qtty;
+		// _model[1].x = qtty;
+
+		_model = glm::rotate( _model, qtty, glm::vec3(0.0, 0.0, 1.0) );
 	}
 
-	void Draw()
+	void Draw( GLenum mode = GL_TRIANGLES, GLfloat rasterSize = 1.0 )
 	{
 		_mesh->Move( _model );
-		_mesh->Draw();
+		_mesh->Draw( mode, rasterSize );
 	}
 
 };

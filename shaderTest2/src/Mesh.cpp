@@ -1,32 +1,28 @@
 
 #include "Mesh.hpp"
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+
 
 using namespace std;
 
-Mesh::Mesh()
+
+
+Mesh::Mesh( void )
 {
 
 	//vao
 	glGenVertexArrays( 1, &_vao );
 	glBindVertexArray( _vao );
-
 
 }
 
-Mesh::Mesh( string filename )
+Mesh::Mesh( string filename ) : Mesh()
 {
-
-	//vao
-	glGenVertexArrays( 1, &_vao );
-	glBindVertexArray( _vao );
-
 	LoadFromFile( filename );
-
-
 }
 
-Mesh::~Mesh()
+Mesh::~Mesh( void )
 {
 
 	//release vbos and vao
@@ -34,32 +30,18 @@ Mesh::~Mesh()
     glDisableVertexAttribArray(1);
 
     glDeleteBuffers(1, &_vertices_vbo);
-    glDeleteBuffers(1, &colours_vbo);
+    glDeleteBuffers(1, &_colours_vbo);
     glDeleteVertexArrays(1, &_vao);
 
 }
 
 void Mesh::LoadToGPU( bool useTexture )
 {
-	
-	const GLfloat points[] = {
-		0.0f,	0.5f,	0.0f,
-		0.5f, -0.5f,	0.0f,
-		-0.5f, -0.5f,	0.0f
-	};
-	
-	const GLfloat colours[] = {
-		1.0f, 0.0f,  0.0f,
-		0.0f, 1.0f,  0.0f,
-		0.0f, 0.0f,  1.0f
-	};
 
 	//points
-	SetInput(&_vertices_vbo, points, 9, "vertex_position" );
-	// Init(&_vertices_vbo, points, 9, 0);
+	LoadArray( &_vertices_vbo, &_vertices, "vertex_position" );
 	//color
-	SetInput(&colours_vbo, colours, 9, "vertex_colour" );
-	// Init(&colours_vbo, colours, 9, 1);
+	LoadArray( &_colours_vbo, &_colours, "vertex_colour" );
 	//normals
 	
 	//uv
@@ -69,92 +51,94 @@ void Mesh::LoadToGPU( bool useTexture )
 	// if( combination[1] ) Init( &_normals_vbo, _normals, 9 );
 	// if( combination[2] ) Init( &_indices_vbo, _indices, 9 );
 	// if( combination[3] ) Init( &_uv_vbo, _uv, 9 );
+
 }
 
-//rename
-void Mesh::SetInput( GLuint* vbo, const GLfloat* array, int size, string varName)
+void Mesh::LoadArray( GLuint* vbo, std::vector<glm::vec3>* array, string varName )
 {
-	/*
-	varLocation is the value of the "layout (location=`varLocation`)" in the vertex shader for the variable varName
-	 
-	 
-	If the layout information is not in the shader then openGL will create a default layout 
-	(usually in order as they appear) or you can define your own binding with 
-	glBindAttribLocation(progam, id, name) before linking.
+	
+	GLuint varLocation = glGetAttribLocation( ShaderProgram::glGetActiveProgram()->getID(), varName.c_str() );
+	GLuint length = array->size()*sizeof(array[0][0]); 
 
-	You can explicitly get those numbers from id = glGetAttribLocation(program, name); 
-	after linking; the name is the string that appears in the vertex shader for the attribute. 
-	For example if you passed "vertexPosition" for name then you would get 0.
-	
-	
 
-	*/
-
-	// int varLocation = glGetAttribLocation( ShaderProgram::glGetActiveProgram(), varName.c_str() );
-	int varLocation = glGetAttribLocation( ShaderProgram::glGetActiveProgram()->getID(), varName.c_str() );
-	
-	
 	glGenBuffers( 1, vbo );
 	glBindBuffer( GL_ARRAY_BUFFER, *vbo );
-	glBufferData( GL_ARRAY_BUFFER, size * sizeof (GLfloat), array, GL_STATIC_DRAW);
+	glBufferData( GL_ARRAY_BUFFER, length, &(array[0][0]), GL_STATIC_DRAW);
 	glVertexAttribPointer( varLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	glEnableVertexAttribArray( varLocation );
+
 }
 
-
-void Mesh::Init( GLuint* vbo, const GLfloat* array, int size, int index)
-{
-	/*
-	index is the value of the "layout (location=`index`)" in the vertex shader for the attribute
-	 
-	 
-	If the layout information is not in the shader then openGL will create a default layout 
-	(usually in order as they appear) or you can define your own binding with 
-	glBindAttribLocation(progam, id, name) before linking.
-
-	You can explicitly get those numbers from id = glGetAttribLocation(program, name); 
-	after linking; the name is the string that appears in the vertex shader for the attribute. 
-	For example if you passed "vertexPosition" for name then you would get 0.
-	
-	
-
-	*/
-	
-	glGenBuffers( 1, vbo );
-	glBindBuffer( GL_ARRAY_BUFFER, *vbo );
-	glBufferData( GL_ARRAY_BUFFER, size * sizeof (GLfloat), array, GL_STATIC_DRAW);
-	glVertexAttribPointer( index, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glEnableVertexAttribArray( index );
-}
-
-void Mesh::Draw( )
+void Mesh::Draw( GLenum mode, GLfloat rasterSize)
 {
 
 	LoadToGPU();
 	
 	glBindVertexArray( _vao );
-	// draw points 0-3 from the currently bound VAO with current in-use shader
-	glDrawArrays( GL_TRIANGLES, 0, 3 );
+	// draw all points from the currently bound VAO with current in-use shader
+	glDrawArrays( GL_LINE_LOOP, 0, _vertices.size() );
+	
+
+	switch( mode )
+	{
+		case GL_POINTS:
+			glPointSize( rasterSize );
+			break;
+		case GL_LINE_STRIP:
+		case GL_LINE_LOOP:
+		case GL_LINES:
+		case GL_LINE_STRIP_ADJACENCY:
+		case GL_LINES_ADJACENCY:
+			glLineWidth( rasterSize );
+			break;
+		default:
+			;
+
+	}
+
+
 }
 
-
-void Mesh::LoadFromFile(string file)
+void Mesh::LoadFromFile( string file )
 {
+	_vertices.push_back( glm::vec3(  0.0f,  0.5f, 0.0f ) );
+	_vertices.push_back( glm::vec3(  0.5f, -0.5f, 0.0f ) );
+	_vertices.push_back( glm::vec3( -0.5f, -0.5f, 0.0f ) );
 
+	_colours.push_back( glm::vec3( 1.0f, 0.0f, 0.0f ) );
+	_colours.push_back( glm::vec3( 0.0f, 1.0f, 0.0f ) );
+	_colours.push_back( glm::vec3( 0.0f, 0.0f, 1.0f ) );
+//*/
+/*
+	_vertices.push_back( glm::vec3(  0.-5f,  0.5f, 0.0f ) );
+	_vertices.push_back( glm::vec3(  0.5f, 0.5f, 0.0f ) );
+	_vertices.push_back( glm::vec3( 0.5f, -0.5f, 0.0f ) );
+	_vertices.push_back( glm::vec3( -0.5f, -0.5f, 0.0f ) );
+
+	_vertices.push_back( glm::vec3(  0.-5f,  0.5f, 0.0f ) );
+	_vertices.push_back( glm::vec3(  0.5f, 0.5f, 0.0f ) );
+	_vertices.push_back( glm::vec3( 0.5f, -0.5f, 0.0f ) );
+	_vertices.push_back( glm::vec3( -0.5f, -0.5f, 0.0f ) );
+
+	_colours.push_back( glm::vec3( 0.1f, 0.0f, 0.0f ) );
+	_colours.push_back( glm::vec3( 0.0f, 1.0f, 0.0f ) );
+	_colours.push_back( glm::vec3( 0.0f, 0.0f, 1.0f ) );
+
+	//*/
 
 }
 
-
-
-Mesh* Mesh::Move( GLfloat* MVmatrix )//, GLfloat* Pmatrix )
+Mesh* Mesh::Move( glm::mat4 MVmatrix )//, glm::mat4 Pmatrix )
 {
 	// MV = Model View
-	//  /!\ Multiply M and V on CPU (vertex independant) and MV with P on GPU (Projection is vertex dependant)
+	// /!\ Multiply M and V on CPU (vertex independant) and MV with P on GPU (Projection is vertex dependant)
 
-	//calculate ModelView from Object position and camera
-	ShaderProgram::glGetActiveProgram()->SetParameter("matrix", MVmatrix);
+	// TODO
+	// calculate ModelView from Object position and camera
+	// change SetParameter to template type glm::mat4
+	ShaderProgram::glGetActiveProgram()->SetParameter( "MVmatrix", glm::value_ptr(MVmatrix) );
 
-	//calculate projection from camera
+	// calculate projection from camera
 	// ShaderProgram::glGetActiveProgram()->SetParameter("Pmatrix", Pmatrix);
 
 	return this;

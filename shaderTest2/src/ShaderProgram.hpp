@@ -2,6 +2,9 @@
 #define __SHADERPROGRAM__
 
 #include <SFML/OpenGL.hpp>
+
+#include <glm/glm.hpp>
+
 #include <string>
 #include <vector>
 

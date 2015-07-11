@@ -40,23 +40,17 @@ int main () {
 		0.5f, 0.0f, 0.0f, 1.0f // fourth column
 	};
 	
-	
-	// Mesh* mesh1 = new Mesh();
-	// Mesh* mesh2 = new Mesh();
-	// mesh1->LoadFromFile("test.obj");
-	// mesh2->LoadFromFile("test.obj");
 
 	Ship* s1 = new Ship();
 	s1->AttachMesh( new Mesh("test.obj") );
 
-	Ship* s2 = new Ship();
-	s2->AttachMesh( new Mesh("test.obj") );
+	Ship* s2 = new Ship( "test.obj" );
 	
 
 	ShaderProgram* prgrm = new ShaderProgram();
 	prgrm->AddVertexShader( "../src/test_vs.glsl" )
 	->AddFragmentShader( "../src/test_fs.glsl" )
-	->SetParameter("matrix", matrix);
+	->SetParameter("MVmatrix", matrix);
 
 
 	glEnable( GL_CULL_FACE );
@@ -87,14 +81,15 @@ int main () {
 		displacement += 0.1;
 
 
-		s1->Move( -sin(displacement) );		
-		s2->Move(  sin(displacement) );		
+		s1->Move( 0.1 );		
+		s2->Move( 0.1*sin(displacement) );		
+
 		
 		// draw mesh
 		prgrm->Begin();
 
-		s1->Draw();
-		s2->Draw();
+		s1->Draw( GL_LINE_LOOP, 3.0 );
+		s2->Draw( GL_POINTS, 5.0 );
 
 		prgrm->End();
 

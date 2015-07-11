@@ -1,5 +1,6 @@
 
 #include "ShaderProgram.hpp"
+#include <glm/gtc/type_ptr.hpp>
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -7,7 +8,27 @@
 
 using namespace std;
 
+
 ShaderProgram* ShaderProgram::_activeProgram = NULL;
+
+
+ShaderProgram::ShaderProgram( void )
+{
+	_programID = glCreateProgram();
+
+}
+
+ShaderProgram::~ShaderProgram( void )
+{
+	for( GLuint &shaderID : _attachedShaderList )
+	{
+		glDetachShader( _programID, shaderID );
+		glDeleteShader( shaderID );
+	}
+
+    glDeleteProgram( _programID );
+
+}
 
 string ShaderProgram::ReadFile( string filename )
 {
@@ -27,9 +48,7 @@ string ShaderProgram::ReadFile( string filename )
 	
 }
 
-
-
-bool ShaderProgram::AddShader(string file, GLenum shaderType)
+bool ShaderProgram::AddShader( string file, GLenum shaderType )
 {
 	GLuint shaderID = glCreateShader( shaderType );
 	string shaderContent = ReadFile( file );
@@ -54,63 +73,51 @@ bool ShaderProgram::AddShader(string file, GLenum shaderType)
 
 }
 
-
-ShaderProgram::ShaderProgram()
-{
-	_programID = glCreateProgram();
-}
-
-ShaderProgram::~ShaderProgram()
-{
-	for( GLuint &shaderID : _attachedShaderList )
-	{
-		glDetachShader( _programID, shaderID );
-		glDeleteShader( shaderID );
-	}
-
-    glDeleteProgram( _programID );
-}
-
-
-ShaderProgram* ShaderProgram::AddVertexShader(string file)
+ShaderProgram* ShaderProgram::AddVertexShader( string file )
 {
 	AddShader( file, GL_VERTEX_SHADER );
 	return this;
+
 }
 
-ShaderProgram* ShaderProgram::AddFragmentShader(string file)
+ShaderProgram* ShaderProgram::AddFragmentShader( string file )
 {
 	AddShader( file, GL_FRAGMENT_SHADER );
 	return this;
+
 }
 
-ShaderProgram* ShaderProgram::SetParameter( string varName, GLfloat* varValue)
+ShaderProgram* ShaderProgram::SetParameter( string varName, GLfloat* varValue )
 {
 	int varLocation = glGetUniformLocation( _programID, varName.c_str() );
 	glUseProgram( _programID );
 	glUniformMatrix4fv( varLocation, 1, GL_FALSE, varValue );
 
 	return this;
+
 }
 
-void ShaderProgram::Begin()
+void ShaderProgram::Begin( void )
 {
 	_activeProgram = this;
 	glUseProgram( _programID );
+
 }
 
-void ShaderProgram::End()
+void ShaderProgram::End( void )
 {
 	_activeProgram = NULL;
 	glUseProgram( 0 );
+
 }
 
-GLuint ShaderProgram::getID()
+GLuint ShaderProgram::getID( void )
 {
 	return _programID;
+
 }
 
-void ShaderProgram::Link()
+void ShaderProgram::Link( void )
 {
 	glLinkProgram( _programID ); 
 
