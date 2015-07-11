@@ -1,3 +1,6 @@
+#ifndef __SHADERPROGRAM__
+#define __SHADERPROGRAM__
+
 #include <SFML/OpenGL.hpp>
 #include <string>
 #include <vector>
@@ -7,6 +10,7 @@ class ShaderProgram
 {
 private:
 
+	static ShaderProgram* _activeProgram;
 	GLuint _programID;
 	std::vector<GLuint> _attachedShaderList;
 
@@ -17,6 +21,12 @@ private:
 public:
 
 	ShaderProgram();
+	~ShaderProgram();
+
+	static ShaderProgram* glGetActiveProgram()
+	{
+		return _activeProgram;
+	}
 
 	ShaderProgram* AddVertexShader( std::string file );
 	ShaderProgram* AddFragmentShader( std::string file );
@@ -30,3 +40,5 @@ public:
 
 
 };
+
+#endif

@@ -41,10 +41,17 @@ int main () {
 	};
 	
 	
-	Mesh* mesh = new Mesh();
-	mesh->LoadFromFile("test.obj");
-	mesh->LoadToGPU();
+	// Mesh* mesh1 = new Mesh();
+	// Mesh* mesh2 = new Mesh();
+	// mesh1->LoadFromFile("test.obj");
+	// mesh2->LoadFromFile("test.obj");
 
+	Ship* s1 = new Ship();
+	s1->AttachMesh( new Mesh("test.obj") );
+
+	Ship* s2 = new Ship();
+	s2->AttachMesh( new Mesh("test.obj") );
+	
 
 	ShaderProgram* prgrm = new ShaderProgram();
 	prgrm->AddVertexShader( "../src/test_vs.glsl" )
@@ -55,6 +62,8 @@ int main () {
 	glEnable( GL_CULL_FACE );
 	glCullFace( GL_BACK );
 	glFrontFace( GL_CW ); // GL_CCW for counter clock-wise
+
+	GLfloat displacement = 0;
 
 	bool running = true;
 	while (running)
@@ -75,10 +84,18 @@ int main () {
 
 		// wipe the drawing surface clear
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		displacement += 0.1;
 
+
+		s1->Move( -sin(displacement) );		
+		s2->Move(  sin(displacement) );		
+		
 		// draw mesh
 		prgrm->Begin();
-		mesh->Draw();
+
+		s1->Draw();
+		s2->Draw();
+
 		prgrm->End();
 
 		// update buffer
@@ -87,8 +104,11 @@ int main () {
 
 	}
 
+	
+
 	delete prgrm;
-	delete mesh;
+	delete s1;
+	delete s2;
 
 	return EXIT_SUCCESS;
 }

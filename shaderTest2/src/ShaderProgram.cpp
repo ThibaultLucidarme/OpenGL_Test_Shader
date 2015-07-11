@@ -7,6 +7,7 @@
 
 using namespace std;
 
+ShaderProgram* ShaderProgram::_activeProgram = NULL;
 
 string ShaderProgram::ReadFile( string filename )
 {
@@ -94,11 +95,13 @@ ShaderProgram* ShaderProgram::SetParameter( string varName, GLfloat* varValue)
 
 void ShaderProgram::Begin()
 {
+	_activeProgram = this;
 	glUseProgram( _programID );
 }
 
 void ShaderProgram::End()
 {
+	_activeProgram = NULL;
 	glUseProgram( 0 );
 }
 
