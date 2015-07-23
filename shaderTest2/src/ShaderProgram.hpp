@@ -3,7 +3,9 @@
 
 #include <SFML/OpenGL.hpp>
 
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <string>
 #include <vector>
@@ -33,7 +35,17 @@ public:
 
 	ShaderProgram* AddVertexShader( std::string file );
 	ShaderProgram* AddFragmentShader( std::string file );
-	ShaderProgram* SetParameter( std::string varName, GLfloat* varValue );
+
+	template<typename T>
+	ShaderProgram* SetParameter( std::string varName, T varValue )
+	{
+		int varLocation = glGetUniformLocation( _programID, varName.c_str() );
+		glUseProgram( _programID );
+		glUniformMatrix4fv( varLocation, 1, GL_FALSE, glm::value_ptr(varValue) );
+
+		return this;
+
+	}
 
 	void Begin();
 	void End();

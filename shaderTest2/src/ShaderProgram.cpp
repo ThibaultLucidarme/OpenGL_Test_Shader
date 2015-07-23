@@ -1,6 +1,5 @@
 
 #include "ShaderProgram.hpp"
-#include <glm/gtc/type_ptr.hpp>
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -83,16 +82,6 @@ ShaderProgram* ShaderProgram::AddVertexShader( string file )
 ShaderProgram* ShaderProgram::AddFragmentShader( string file )
 {
 	AddShader( file, GL_FRAGMENT_SHADER );
-	return this;
-
-}
-
-ShaderProgram* ShaderProgram::SetParameter( string varName, GLfloat* varValue )
-{
-	int varLocation = glGetUniformLocation( _programID, varName.c_str() );
-	glUseProgram( _programID );
-	glUniformMatrix4fv( varLocation, 1, GL_FALSE, varValue );
-
 	return this;
 
 }

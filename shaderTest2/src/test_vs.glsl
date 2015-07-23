@@ -1,13 +1,17 @@
 #version 410
 
-layout(location = 0) in vec3 vertex_position;
-layout(location = 1) in vec3 vertex_colour;
+in vec3 vertex_position;
+in vec3 vertex_normal;
 
-uniform mat4 MVmatrix; // our matrix
+uniform mat4 ProjectionViewMatrix;
+uniform mat4 ModelMatrix;
 
-out vec3 colour;
+out vec3 normal;
 
-void main() {
-	colour = vertex_colour;
-	gl_Position = MVmatrix * vec4(vertex_position, 1.0);
+void main() 
+{
+
+	normal = vertex_normal;
+	gl_Position = ProjectionViewMatrix * ModelMatrix * vec4(vertex_position, 1.0);
+
 }

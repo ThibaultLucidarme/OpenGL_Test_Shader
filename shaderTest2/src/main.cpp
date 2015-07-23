@@ -2,6 +2,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
 
+#include <iostream>
+
 #include "Mesh.hpp"
 #include "ShaderProgram.hpp"
 
@@ -15,6 +17,10 @@ int main () {
 
 	unsigned int size = 500;
 
+
+
+	// Init ************************************************************************************
+
 	sf::ContextSettings glSettings;
 	glSettings.majorVersion = 4;
 	glSettings.minorVersion = 4;
@@ -26,42 +32,64 @@ int main () {
 
 	window.setVerticalSyncEnabled(true);
 	window.setFramerateLimit(60);
-
-	// tell GL to only draw onto a pixel if the shape is closer to the viewer
-	glEnable (GL_DEPTH_TEST); // enable depth-testing
-	glDepthFunc (GL_LESS); // depth-testing interprets a smaller value as "closer"
+	window.setKeyRepeatEnabled(false);
 
 
+	// OpenGL Options ************************************************************************************
 
-	GLfloat matrix[] = {
-		1.0f, 0.0f, 0.0f, 0.0f, // first column
-		0.0f, 1.0f, 0.0f, 0.0f, // second column
-		0.0f, 0.0f, 1.0f, 0.0f, // third column
-		0.5f, 0.0f, 0.0f, 1.0f // fourth column
-	};
+
+	// depth
+	glEnable( GL_DEPTH_TEST ); // enable depth-testing
+	glDepthFunc (GL_LESS ); // depth-testing interprets a smaller value as "closer"
+	
+	// cull faces
+	glEnable( GL_CULL_FACE );
+	glCullFace( GL_BACK );
+	glFrontFace( GL_CCW ); // GL_CCW for counter clock-wise
+	
+	// face order
+	// glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
+
+	// View ************************************************************************************
 	
 
-	Ship* s1 = new Ship();
-	s1->AttachMesh( new Mesh("test.obj") );
+	glm::mat4 Projection = glm::perspective( 90.0f, //fov
+											4.0f / 3.0f, //aspect ratio
+											0.1f, //near plane
+											100.f //far plane
+										);
 
-	Ship* s2 = new Ship( "test.obj" );
-	
+	glm::mat4 View 		 = glm::lookAt( glm::vec3(1.0, 1.0, 1.0), //eye
+										glm::vec3(0.0, 0.0, 0.0), //center
+										glm::vec3(0.0, 0.1, 0.0) //up
+									);
 
 	ShaderProgram* prgrm = new ShaderProgram();
 	prgrm->AddVertexShader( "../src/test_vs.glsl" )
 	->AddFragmentShader( "../src/test_fs.glsl" )
-	->SetParameter("MVmatrix", matrix);
+	->SetParameter( "ProjectionViewMatrix", Projection*View );
 
 
-	glEnable( GL_CULL_FACE );
-	glCullFace( GL_BACK );
-	glFrontFace( GL_CW ); // GL_CCW for counter clock-wise
+	// Load Object ************************************************************************************
 
-	GLfloat displacement = 0;
+
+
+	Object* s1 = new Object( "../data/suzanne.obj" );
+	
+
+	// ************************************************************************************
+
+	prgrm->Begin();
 
 	bool running = true;
 	while (running)
 	{
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+
+	// Event ************************************************************************************
+
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
@@ -70,28 +98,17 @@ int main () {
 				sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) ||
 				sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 				running = false;
-
+			
 			else if (event.type == sf::Event::Resized)
-				glViewport(0, 0, event.size.width, event.size.height);
+				glViewport(0, 0, event.size.width, event.size.height);		
 
 		}
 
-		// wipe the drawing surface clear
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		displacement += 0.1;
+	// Draw ************************************************************************************
 
 
-		s1->Move( 0.1 );		
-		s2->Move( 0.1*sin(displacement) );		
-
-		
-		// draw mesh
-		prgrm->Begin();
-
-		s1->Draw( GL_LINE_LOOP, 3.0 );
-		s2->Draw( GL_POINTS, 5.0 );
-
-		prgrm->End();
+		s1->Move( 0.01 )
+		  ->Draw( GL_TRIANGLES );
 
 		// update buffer
 		window.display();
@@ -99,11 +116,11 @@ int main () {
 
 	}
 
+	prgrm->End();
 	
 
 	delete prgrm;
 	delete s1;
-	delete s2;
 
 	return EXIT_SUCCESS;
 }

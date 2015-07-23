@@ -5,11 +5,13 @@
 #include <SFML/OpenGL.hpp>
 #include <vector>
 #include <string>
+#include <fstream>
 #include "ShaderProgram.hpp"
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
 
 #define MESH_DYNAMIC true
 #define MESH_STATIC false
@@ -46,13 +48,14 @@ private:
 
 public:
 
-	Mesh();
+	Mesh( void );
 	Mesh( std::string filename );
 	~Mesh();
 
-	void LoadFromFile( std::string file);
+	void LoadFromFile( void );
+	void LoadOBJFromFile( std::string file );
 	void Draw( GLenum mode = GL_TRIANGLES, GLfloat rasterSize = 1.0 );
-	Mesh* Move( glm::mat4 MVmatrix );
+	Mesh* Move( glm::mat4 ModelMatrix );
 	
 };
 
@@ -64,7 +67,7 @@ public:
 // Make this class abstract so that the real ship class inherits from it
 //
 
-class Ship
+class Object
 {
 private: 
 
@@ -74,37 +77,44 @@ private:
 
 public:
 
-	Ship()
+	Object()
 	{
 		//If there is a single scalar parameter to a matrix constructor, it is used to initialize all the components on the matrix's diagonal, with the remaining components initialized to 0.0f
-		_model = glm::mat4( 1.0 );
 
 	}
 
-	Ship( std::string filename ) : Ship()
+	Object( std::string filename ) : Object()
 	{
+		_model = glm::mat4( 1.0 );
 		AttachMesh( new Mesh( filename ) );
 	}
 	
-	void AttachMesh( Mesh* mesh )
+	Object* AttachMesh( Mesh* mesh )
 	{
 		_mesh = mesh;
+
+		return this;
 	}
 
-	void Move( GLfloat qtty )
+	Object* Move( GLfloat qtty )
 	{
 		// Do not call Mesh::Move()
-		// offset it to when Ship::Draw()
-		// This is so that the Ship::Move is independent from the ShaderProgram::Begin context 
+		// offset it to when Object::Draw()
+		// This is so that the Object::Move is independent from the ShaderProgram::Begin context 
 		// _model[1].x = qtty;
 
-		_model = glm::rotate( _model, qtty, glm::vec3(0.0, 0.0, 1.0) );
+		_model = glm::rotate( _model, qtty, glm::vec3(0.1, 1.0, 0.2) );
+
+		return this;
 	}
 
-	void Draw( GLenum mode = GL_TRIANGLES, GLfloat rasterSize = 1.0 )
+	Object* Draw( GLenum mode = GL_TRIANGLES, GLfloat rasterSize = 1.0 )
 	{
+		// calculate ViewProjection matrix
 		_mesh->Move( _model );
 		_mesh->Draw( mode, rasterSize );
+
+		return this;
 	}
 
 };
