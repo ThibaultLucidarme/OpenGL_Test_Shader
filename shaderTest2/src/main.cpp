@@ -22,6 +22,8 @@ int main( int argc, char** argv) {
 
 	int size = parser.addOption<int>("-s",500,"Window size");
 	std::string modelFilename = parser.addOption<std::string>("-m","../data/suzanne.obj","Model Mesh OBJ file");
+	bool tesselate = (parser.addOption<int>("--tesselation",1, "Use Tesselation Shader ( 0 | 1 )")==1);
+	
 	parser.addHelpOption();
 
 	
@@ -39,6 +41,9 @@ int main( int argc, char** argv) {
 	window.setVerticalSyncEnabled(true);
 	window.setFramerateLimit(60);
 	window.setKeyRepeatEnabled(false);
+	
+	const sf::Input &input = window.GetInput();
+	sf::Vector2i mouseDownPosition;
 
 
 	// OpenGL Options ************************************************************************************
@@ -75,10 +80,19 @@ int main( int argc, char** argv) {
 	Camera* camera = new Camera( CAM_PERSP );
 									
 
-	ShaderProgram* prgrm = new ShaderProgram();
-	prgrm->AddVertexShader( "../src/test_vs.glsl" )
-		 ->AddFragmentShader( "../src/test_fs.glsl" )
-		 ->SetParameter( "ProjectionViewMatrix", Camera::GetActiveCamera()->GetProjectionView() );// todo, eventually have ShaderProgram automatically/internally use Camera
+	ShaderProgram* objectPrgrm = new ShaderProgram();
+	objectPrgrm->AddVertexShader( "../src/test_vs.glsl" )
+		 ->AddFragmentShader( "../src/test_fs.glsl" );
+	
+	/*
+	ShaderProgram* terrainPrgrm = new ShaderProgram();
+	terrainPrgrm->AddVertexShader( "../src/test_vs.glsl" )
+			    ->AddFragmentShader( "../src/test_fs.glsl" );
+	if(tesselate) terrainPrgrm->AddTesselationShaders("../src/test_fs.glsl", "../src/test_fs.glsl");
+	//*/
+	
+	
+	objectPrgrm->SetParameter( "ProjectionViewMatrix", Camera::GetActiveCamera()->GetProjectionView() );// todo, eventually have Camera automatically/internally set CurrentProgram ProjectionViewMatrix parameter
 
 
 	// Load Object ************************************************************************************
@@ -90,7 +104,7 @@ int main( int argc, char** argv) {
 
 	// ************************************************************************************
 
-	prgrm->Begin();
+	objectPrgrm->Begin();
 
 	bool running = true;
 	while (running)
@@ -110,12 +124,26 @@ int main( int argc, char** argv) {
 				running = false;
 			
 			else if (event.type == sf::Event::Resized)
-				glViewport(0, 0, event.size.width, event.size.height);		
+				glViewport(0, 0, event.size.width, event.size.height);	
+
+			else if( event.Type == sf::Event::MouseButtonPressed &&
+                     event.MouseButton.Button == sf::Mouse::Left )
+            {
+                mouseDownPosition.x = event.MouseButton.X;
+                mouseDownPosition.y = event.MouseButton.Y;
+            }		
 
 		}
 
 	// Draw ************************************************************************************
 
+		if( input.IsMouseButtonDown( sf::Mouse::Left ) )
+        {
+			glm::vec3 dragMvmt = glm::vec3(input.GetMouseX()-mouseDownPosition.x,input.GetMouseY()-mouseDownPosition.y,0.0)
+			camera->Move( dragMvmt );
+			objectPrgrm->SetParameter( "ProjectionViewMatrix", camera->GetProjectionView() );
+
+		}
 
 		s1->Move( 0.01 )
 		  ->Draw( GL_TRIANGLES );
@@ -126,10 +154,10 @@ int main( int argc, char** argv) {
 
 	}
 
-	prgrm->End();
+	objectPrgrm->End();
 	
 
-	delete prgrm;
+	delete objectPrgrm;
 	delete camera;
 	delete s1;
 

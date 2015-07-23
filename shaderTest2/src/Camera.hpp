@@ -14,7 +14,10 @@
 enum CameraMode{
 	CAM_ORTHO,
 	CAM_PERSP,
-	CAM_FRUSTUM
+	CAM_FRUSTUM,
+	
+	CAM_CART,
+	CAM_SPHERE
 };
 
 class Camera
@@ -45,35 +48,35 @@ public:
 		switch( _camMode )
 		{
 			case CAM_ORTHO:
-			_projection = glm::ortho(
-			 	-250, // left
-				250, // right,
-				-250, // bottom,
-				250, // top,
-				0.1f, //near plane
-				100.f //far plane
-			);
-			break;
+				_projection = glm::ortho(
+					-250, // left
+					250, // right,
+					-250, // bottom,
+					250, // top,
+					0.1f, //near plane
+					100.f //far plane
+				);
+				break;	
+			
+			case CAM_FRUSTUM:
+				_projection = glm::frustum(
+					-250, // left
+					250, // right,
+					-250, // bottom,
+					250, // top,
+					0.1f, //near plane
+					100.f //far plane
+				);
+				break;
 			
 			case CAM_PERSP:
-			_projection = glm::perspective( 
-				_fov,
-				_aspectRatio,
-				0.1f, //near plane
-				100.f //far plane
-			);
-			break;
-					
-			case CAM_FRUSTUM:
-			_projection = glm::frustum(
-				-250, // left
-				250, // right,
-				-250, // bottom,
-				250, // top,
-				0.1f, //near plane
-				100.f //far plane
-			);
-			break;
+			default:
+				_projection = glm::perspective( 
+					_fov,
+					_aspectRatio,
+					0.1f, //near plane
+					100.f //far plane
+				);
 			
 		}
 		
@@ -92,7 +95,7 @@ public:
 		return this;
 	}
 		
-	Camera* Move( glm::vec3 displacement, bool stayFocused = false )
+	Camera* Move( glm::vec3 displacement, bool stayFocused = true )
 	{
 		_position += displacement;
 		if(!stayFocused) _lookAt += displacement;
@@ -103,6 +106,21 @@ public:
 	{
 		_position = newPosition;
 		if(!stayFocused) _lookAt += displacement;
+		return this;
+	}
+	
+	Camera* SetCoordinates( enum CameraMode mode  )
+	{
+		switch( mode )
+		{
+			case CAM_SPHERE;
+				;
+				break;
+			case CAM_CART:
+			default:
+				;
+		}
+		
 		return this;
 	}
 	
