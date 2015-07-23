@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#include "CommandLineParser.hpp"
+#include "Camera.hpp"
 #include "Mesh.hpp"
 #include "ShaderProgram.hpp"
 
@@ -11,14 +13,18 @@ using namespace std;
 
 
 
+int main( int argc, char** argv) {
+	
+	// Execution parameters ************************************************************************************
+		
+		
+	p::CommandLineParser parser(argc, argv);
 
+	int size = parser.addOption<int>("-s",500,"Window size");
+	std::string modelFilename = parser.addOption<std::string>("-m","../data/suzanne.obj","Model Mesh OBJ file");
+	parser.addHelpOption();
 
-int main () {
-
-	unsigned int size = 500;
-
-
-
+	
 	// Init ************************************************************************************
 
 	sf::ContextSettings glSettings;
@@ -53,7 +59,7 @@ int main () {
 
 	// View ************************************************************************************
 	
-
+	/*
 	glm::mat4 Projection = glm::perspective( 90.0f, //fov
 											4.0f / 3.0f, //aspect ratio
 											0.1f, //near plane
@@ -64,18 +70,22 @@ int main () {
 										glm::vec3(0.0, 0.0, 0.0), //center
 										glm::vec3(0.0, 0.1, 0.0) //up
 									);
+	//*/
+	
+	Camera* camera = new Camera( CAM_PERSP );
+									
 
 	ShaderProgram* prgrm = new ShaderProgram();
 	prgrm->AddVertexShader( "../src/test_vs.glsl" )
-	->AddFragmentShader( "../src/test_fs.glsl" )
-	->SetParameter( "ProjectionViewMatrix", Projection*View );
+		 ->AddFragmentShader( "../src/test_fs.glsl" )
+		 ->SetParameter( "ProjectionViewMatrix", Camera::GetActiveCamera()->GetProjectionView() );// todo, eventually have ShaderProgram automatically/internally use Camera
 
 
 	// Load Object ************************************************************************************
 
 
 
-	Object* s1 = new Object( "../data/suzanne.obj" );
+	Object* s1 = new Object( modelFilename );
 	
 
 	// ************************************************************************************
@@ -120,6 +130,7 @@ int main () {
 	
 
 	delete prgrm;
+	delete camera;
 	delete s1;
 
 	return EXIT_SUCCESS;
