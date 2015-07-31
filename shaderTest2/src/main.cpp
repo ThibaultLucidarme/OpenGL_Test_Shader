@@ -127,11 +127,11 @@ objectPrgrm->AddVertexShader( "../src/test_vs.glsl" )
 			else if (event.type == sf::Event::Resized)
 				glViewport(0, 0, event.size.width, event.size.height);	
 
-			else if( event.Type == sf::Event::MouseButtonPressed &&
-                     event.MouseButton.Button == sf::Mouse::Left )
+			else if( event.type == sf::Event::MouseButtonPressed &&
+                     event.mouseButton.button == sf::Mouse::Left ) 
             {
-                mouseDownPosition.x = event.MouseButton.X;
-                mouseDownPosition.y = event.MouseButton.Y;
+                mouseDownPosition.x = event.mouseButton.x;
+                mouseDownPosition.y = event.mouseButton.y;
             }		
 
 		}
