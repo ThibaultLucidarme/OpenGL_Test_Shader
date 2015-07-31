@@ -22,7 +22,7 @@ int main( int argc, char** argv) {
 
 	int size = parser.addOption<int>("-s",500,"Window size");
 	std::string modelFilename = parser.addOption<std::string>("-m","../data/suzanne.obj","Model Mesh OBJ file");
-	bool tesselate = (parser.addOption<int>("--tesselation",1, "Use Tesselation Shader ( 0 | 1 )")==1);
+	//bool tesselate = (parser.addOption<int>("--tesselation",1, "Use Tesselation Shader ( 0 | 1 )")==1);
 	
 	parser.addHelpOption();
 
@@ -42,8 +42,7 @@ int main( int argc, char** argv) {
 	window.setFramerateLimit(60);
 	window.setKeyRepeatEnabled(false);
 	
-	const sf::Input &input = window.GetInput();
-	sf::Vector2i mouseDownPosition;
+	sf::Vector2i mouseDownPosition, mousePosition;
 
 
 	// OpenGL Options ************************************************************************************
@@ -71,19 +70,19 @@ int main( int argc, char** argv) {
 											100.f //far plane
 										);
 
-	glm::mat4 View 		 = glm::lookAt( glm::vec3(1.0, 1.0, 1.0), //eye
+	glm::mat4 View 		 = glm::lookAt( glm::vec3(10.0, 10.0, 1.0), //eye
 										glm::vec3(0.0, 0.0, 0.0), //center
 										glm::vec3(0.0, 0.1, 0.0) //up
 									);
 	//*/
-	
-	Camera* camera = new Camera( CAM_PERSP );
-									
 
-	ShaderProgram* objectPrgrm = new ShaderProgram();
-	objectPrgrm->AddVertexShader( "../src/test_vs.glsl" )
-		 ->AddFragmentShader( "../src/test_fs.glsl" );
-	
+Camera* camera = new Camera( CAM_PERSP, glm::vec3(10.0, 10.0, 1.0) );
+
+
+ShaderProgram* objectPrgrm = new ShaderProgram();
+objectPrgrm->AddVertexShader( "../src/test_vs.glsl" )
+->AddFragmentShader( "../src/test_fs.glsl" );
+
 	/*
 	ShaderProgram* terrainPrgrm = new ShaderProgram();
 	terrainPrgrm->AddVertexShader( "../src/test_vs.glsl" )
@@ -92,7 +91,9 @@ int main( int argc, char** argv) {
 	//*/
 	
 	
-	objectPrgrm->SetParameter( "ProjectionViewMatrix", Camera::GetActiveCamera()->GetProjectionView() );// todo, eventually have Camera automatically/internally set CurrentProgram ProjectionViewMatrix parameter
+	// objectPrgrm->SetParameter( "ProjectionViewMatrix", Camera::GetActiveCamera()->GetProjectionView() );// todo, eventually have Camera automatically/internally set CurrentProgram ProjectionViewMatrix parameter
+	// objectPrgrm->SetParameter( "ProjectionViewMatrix", Projection*View );// todo, eventually have Camera automatically/internally set CurrentProgram ProjectionViewMatrix parameter
+	objectPrgrm->SetParameter( "ProjectionViewMatrix", camera->GetProjectionView() );// todo, eventually have Camera automatically/internally set CurrentProgram ProjectionViewMatrix parameter
 
 
 	// Load Object ************************************************************************************
@@ -137,16 +138,34 @@ int main( int argc, char** argv) {
 
 	// Draw ************************************************************************************
 
-		if( input.IsMouseButtonDown( sf::Mouse::Left ) )
-        {
-			glm::vec3 dragMvmt = glm::vec3(input.GetMouseX()-mouseDownPosition.x,input.GetMouseY()-mouseDownPosition.y,0.0)
-			camera->Move( dragMvmt );
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) )
+		{
+			mousePosition = sf::Mouse::getPosition(window);
+			glm::vec3 drag = glm::vec3(
+				-mousePosition.y+mouseDownPosition.y,
+				 mousePosition.x-mouseDownPosition.x,
+				 0.0f);
+			GLfloat angle = glm::length(drag)==0?0:-0.75;
+
+			if( drag.x==0 && drag.y==0 ) drag = glm::vec3(0.0, 1.0, 0.0);
+
+			camera->Rotate( drag, angle, s1->GetPosition() );
 			objectPrgrm->SetParameter( "ProjectionViewMatrix", camera->GetProjectionView() );
 
 		}
 
-		s1->Move( 0.01 )
-		  ->Draw( GL_TRIANGLES );
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Right) )
+		{
+			mousePosition = sf::Mouse::getPosition(window);
+			sf::Vector2i drag = mousePosition-mouseDownPosition;
+
+			camera->Move( glm::normalize( glm::vec3(drag.x, drag.y, 0.0)) );
+			objectPrgrm->SetParameter( "ProjectionViewMatrix", camera->GetProjectionView() );
+
+		}
+
+		// s1->Move( 0.01 )
+		s1->Draw( GL_TRIANGLES );
 
 		// update buffer
 		window.display();

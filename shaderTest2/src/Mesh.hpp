@@ -117,6 +117,32 @@ public:
 		return this;
 	}
 
+	glm::vec3 GetPosition( void )
+	{
+		return  glm::vec3( _model[3].x, _model[3].y, _model[3].z  );
+	}
+
+	/*
+
+	Object* AttachCamera( Camera* cam, vec3* offset = NULL )
+	{
+		_attachedCamera = cam;
+	if(offset!=NULL) _cameraOffset = *offset; // else use _cameraOffset defined in Object constructor
+	
+	_attachedCamera -> MoveTo( _position+_cameraOffset );
+}
+
+
+Object::Object( string filename, vec3 scale =vec3(1.0f) )
+{
+	// read filename
+	// and loadMesh
+	
+	_model = glm::scale( _model, scale );
+}
+
+//*/
+
 };
 
 
