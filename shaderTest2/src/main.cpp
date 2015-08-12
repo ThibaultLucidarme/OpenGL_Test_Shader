@@ -62,26 +62,13 @@ int main( int argc, char** argv) {
 
 
 	// View ************************************************************************************
-	
-	/*
-	glm::mat4 Projection = glm::perspective( 90.0f, //fov
-											4.0f / 3.0f, //aspect ratio
-											0.1f, //near plane
-											100.f //far plane
-										);
 
-	glm::mat4 View 		 = glm::lookAt( glm::vec3(10.0, 10.0, 1.0), //eye
-										glm::vec3(0.0, 0.0, 0.0), //center
-										glm::vec3(0.0, 0.1, 0.0) //up
-									);
-	//*/
-
-Camera* camera = new Camera( CAM_PERSP, glm::vec3(10.0, 10.0, 1.0) );
+	Camera* camera = new Camera( CAM_PERSP, glm::vec3(0.0, 0.0, 30.0) );
 
 
-ShaderProgram* objectPrgrm = new ShaderProgram();
-objectPrgrm->AddVertexShader( "../src/test_vs.glsl" )
-->AddFragmentShader( "../src/test_fs.glsl" );
+	ShaderProgram* objectPrgrm = new ShaderProgram();
+	objectPrgrm->AddVertexShader( "../src/test_vs.glsl" )
+	->AddFragmentShader( "../src/test_fs.glsl" );
 
 	/*
 	ShaderProgram* terrainPrgrm = new ShaderProgram();
@@ -100,12 +87,12 @@ objectPrgrm->AddVertexShader( "../src/test_vs.glsl" )
 
 
 
-	Object* s1 = new Object( modelFilename );
 	
+	objectPrgrm->Begin();
+	Object* s1 = new Object( modelFilename , 01);
 
 	// ************************************************************************************
 
-	objectPrgrm->Begin();
 
 	bool running = true;
 	while (running)
@@ -142,10 +129,10 @@ objectPrgrm->AddVertexShader( "../src/test_vs.glsl" )
 		{
 			mousePosition = sf::Mouse::getPosition(window);
 			glm::vec3 drag = glm::vec3(
-				-mousePosition.y+mouseDownPosition.y,
-				 mousePosition.x-mouseDownPosition.x,
+				mousePosition.y-mouseDownPosition.y,
+				mousePosition.x-mouseDownPosition.x,
 				 0.0f);
-			GLfloat angle = glm::length(drag)==0?0:-0.75;
+			GLfloat angle = glm::length(drag)==0?0:-0.01;
 
 			if( drag.x==0 && drag.y==0 ) drag = glm::vec3(0.0, 1.0, 0.0);
 
@@ -159,13 +146,13 @@ objectPrgrm->AddVertexShader( "../src/test_vs.glsl" )
 			mousePosition = sf::Mouse::getPosition(window);
 			sf::Vector2i drag = mousePosition-mouseDownPosition;
 
-			camera->Move( glm::normalize( glm::vec3(drag.x, drag.y, 0.0)) );
+			camera->Move( glm::normalize( glm::vec3(-drag.x, -drag.y, 0.0)) );
 			objectPrgrm->SetParameter( "ProjectionViewMatrix", camera->GetProjectionView() );
 
 		}
 
-		// s1->Move( 0.01 )
-		s1->Draw( GL_TRIANGLES );
+		s1->Move( 0.01 );
+		s1->Draw( GL_POINTS );
 
 		// update buffer
 		window.display();
