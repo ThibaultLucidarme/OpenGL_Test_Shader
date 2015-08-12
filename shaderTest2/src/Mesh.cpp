@@ -14,7 +14,7 @@ Mesh::Mesh( void )
 	//vao
 	glGenVertexArrays( 1, &_vao );
 	glBindVertexArray( _vao );
-	_isLoadedToGPU = true;
+	_isLoadedToGPU = false;
 
 }
 
@@ -70,11 +70,11 @@ void Mesh::LoadArray( GLuint* vbo, std::vector<glm::vec3>* array, string varName
 void Mesh::Draw( GLenum mode, GLfloat rasterSize)
 {
 
-	// if( !_isLoadedToGPU )
-	// {	
+	if( !_isLoadedToGPU )
+	{	
 		LoadToGPU();
-	// 	_isLoadedToGPU = true;
-	// }
+		_isLoadedToGPU = true;
+	}
 
 	glBindVertexArray( _vao );
 	// draw all points from the currently bound VAO with current in-use shader
@@ -181,10 +181,11 @@ void Mesh::LoadOBJFromFile( string filename )
 
 	// indexing
 	for( unsigned int i=0; i<vertexIndices.size(); i++ ) _vertices.push_back( temp_vertices[ vertexIndices[i] ] );
-		for( unsigned int i=0; i<normalIndices.size(); i++ ) _normals.push_back(  temp_normals[ normalIndices[i] ] );
-			for( unsigned int i=0; i<uvIndices.size(); i++ )	 _uv.push_back( 	  temp_uvs[ uvIndices[i] ] );
+	for( unsigned int i=0; i<normalIndices.size(); i++ ) _normals.push_back(  temp_normals[ normalIndices[i] ] );
+	for( unsigned int i=0; i<uvIndices.size(); i++ )	 _uv.push_back( 	  temp_uvs[ uvIndices[i] ] );
+
+	fclose( file );
+}
 
 
-				fclose( file );
-		}
 
