@@ -20,8 +20,10 @@
 #include <exception>
 #include <map>
 
-#include "version.hpp"
-
+//#include "version.hpp"
+#define PROJECT_VERSION_MAJOR 1
+#define PROJECT_VERSION_MINOR 0
+#define PROJECT_VERSION_PATCH 2
 
 namespace p
 {
@@ -90,6 +92,10 @@ std::string _appName;
         ss >> s;
     }
 
+	void ConvertType( std::string& s2, std::string& s1)
+    {
+		s1 = s2;
+    }
 
 
 public:
@@ -193,9 +199,10 @@ void addHelpOption(std::string s="")
 
 void DisplayOption()
 {
-	
-	std::cout<<std::endl<<_appName<<" version: "<<PROJECT_VERSION<<std::endl<<std::endl;
-	
+	std::cout<<std::endl<<_appName<<" version: "<< int(PROJECT_VERSION_MAJOR) <<"."
+												<< int(PROJECT_VERSION_MINOR) <<"."
+												<< int(PROJECT_VERSION_PATCH) 
+									<<std::endl<<std::endl;	
 	exit(EXIT_SUCCESS);
 }
 

@@ -40,6 +40,7 @@ private:
 
 
 	GLuint _vao;
+	bool _isLoadedToGPU;
 
 
 	void LoadArray( GLuint* vbo, std::vector<glm::vec3>* array, std::string varName);
@@ -50,9 +51,8 @@ public:
 
 	Mesh( void );
 	Mesh( std::string filename );
-	~Mesh();
+	~Mesh( void );
 
-	void LoadFromFile( void );
 	void LoadOBJFromFile( std::string file );
 	void Draw( GLenum mode = GL_TRIANGLES, GLfloat rasterSize = 1.0 );
 	Mesh* Move( glm::mat4 ModelMatrix );
@@ -77,16 +77,21 @@ private:
 
 public:
 
-	Object()
+	Object( void )
 	{
 		//If there is a single scalar parameter to a matrix constructor, it is used to initialize all the components on the matrix's diagonal, with the remaining components initialized to 0.0f
 
 	}
 
-	Object( std::string filename ) : Object()
+	Object( std::string filename, GLfloat scale = 1.0f ) : Object()
 	{
-		_model = glm::mat4( 1.0 );
+		_model = glm::scale(glm::mat4( 1.0f ), glm::vec3(scale) );
 		AttachMesh( new Mesh( filename ) );
+	}
+
+	~Object( void )
+	{
+		delete _mesh;
 	}
 	
 	Object* AttachMesh( Mesh* mesh )
@@ -116,6 +121,32 @@ public:
 
 		return this;
 	}
+
+	glm::vec3 GetPosition( void )
+	{
+		return  glm::vec3( _model[3].x, _model[3].y, _model[3].z  );
+	}
+
+	/*
+
+	Object* AttachCamera( Camera* cam, vec3* offset = NULL )
+	{
+		_attachedCamera = cam;
+	if(offset!=NULL) _cameraOffset = *offset; // else use _cameraOffset defined in Object constructor
+	
+	_attachedCamera -> MoveTo( _position+_cameraOffset );
+}
+
+
+Object::Object( string filename, vec3 scale =vec3(1.0f) )
+{
+	// read filename
+	// and loadMesh
+	
+	_model = glm::scale( _model, scale );
+}
+
+//*/
 
 };
 

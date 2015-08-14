@@ -8,7 +8,7 @@ set(CMAKE_BUILD_TYPE Debug)
 project( ${PROJECT_NAME} )
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-set (CMAKE_CXX_FLAGS "-Wall -Werror -pedantic -g -std=c++11") 
+set (CMAKE_CXX_FLAGS "-Wall -Werror -pedantic -g -std=c++11 -pg") 
 ADD_DEFINITIONS(
     -lGL
     -lGLU

@@ -14,21 +14,18 @@ Mesh::Mesh( void )
 	//vao
 	glGenVertexArrays( 1, &_vao );
 	glBindVertexArray( _vao );
+	_isLoadedToGPU = false;
 
 }
 
 Mesh::Mesh( string filename ) : Mesh()
 {
 	LoadOBJFromFile( filename );
-
-
-	int i=0;
-	i++;
 }
 
 Mesh::~Mesh( void )
 {
-
+	_isLoadedToGPU = false;
 	//release vbos and vao
     glDisableVertexAttribArray(0); //attribIndex from Init
     glDisableVertexAttribArray(1);
@@ -73,44 +70,37 @@ void Mesh::LoadArray( GLuint* vbo, std::vector<glm::vec3>* array, string varName
 void Mesh::Draw( GLenum mode, GLfloat rasterSize)
 {
 
-	LoadToGPU();
-	
+	if( !_isLoadedToGPU )
+	{	
+		LoadToGPU();
+		_isLoadedToGPU = true;
+	}
+
 	glBindVertexArray( _vao );
 	// draw all points from the currently bound VAO with current in-use shader
 	glDrawArrays( mode, 0, _vertices.size() );
-	
+
 
 	switch( mode )
 	{
 		case GL_POINTS:
-			glPointSize( rasterSize );
-			break;
+		glPointSize( rasterSize );
+		break;
 		case GL_LINE_STRIP:
 		case GL_LINE_LOOP:
 		case GL_LINES:
 		case GL_LINE_STRIP_ADJACENCY:
 		case GL_LINES_ADJACENCY:
-			glLineWidth( rasterSize );
-			break;
+		glLineWidth( rasterSize );
+		break;
 		default:
-			;
+		;
 
 	}
 
 
 }
 
-void Mesh::LoadFromFile( void )
-{
-	_vertices.push_back( glm::vec3(  0.0f,  0.5f, 0.0f ) );
-	_vertices.push_back( glm::vec3(  0.5f, -0.5f, 0.0f ) );
-	_vertices.push_back( glm::vec3( -0.5f, -0.5f, 0.0f ) );
-
-	_colours.push_back( glm::vec3( 1.0f, 0.0f, 0.0f ) );
-	_colours.push_back( glm::vec3( 0.0f, 1.0f, 0.0f ) );
-	_colours.push_back( glm::vec3( 0.0f, 0.0f, 1.0f ) );
-
-}
 
 Mesh* Mesh::Move( glm::mat4 ModelMatrix )
 {
@@ -127,18 +117,18 @@ void Mesh::LoadOBJFromFile( string filename )
 
 	FILE* file = fopen ( filename.c_str() , "r");
 
-    char line[128];
+	char line[128];
 	std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
 	std::vector< glm::vec3 > temp_vertices, temp_normals;
 	std::vector< glm::vec2 > temp_uvs;	
 
 
-    while( !feof( file ) )	
-    {
+	while( !feof( file ) )	
+	{
 		// read the first word of the line
 		int res = fscanf(file, "%s", line);
 		if (res == EOF) break; // EOF = End Of File. Quit the loop.
-	 
+
 		// vertices
 		if ( strcmp( line, "v" ) == 0 )
 		{
@@ -194,7 +184,8 @@ void Mesh::LoadOBJFromFile( string filename )
 	for( unsigned int i=0; i<normalIndices.size(); i++ ) _normals.push_back(  temp_normals[ normalIndices[i] ] );
 	for( unsigned int i=0; i<uvIndices.size(); i++ )	 _uv.push_back( 	  temp_uvs[ uvIndices[i] ] );
 
-
 	fclose( file );
 }
+
+
 
