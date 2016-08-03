@@ -5,12 +5,23 @@
 #include <iostream>
 
 #include "CommandLineParser.hpp"
-#include "Camera.hpp"
 #include "Mesh.hpp"
 #include "ShaderProgram.hpp"
+#include "EventHandler.hpp"
+#include "Camera.hpp"
 
 using namespace std;
 
+// DEBUG cout glm structs ***********************************************
+
+#include <glm/gtx/string_cast.hpp>
+
+// template<typename genType>
+// std::ostream& operator<<(std::ostream& out, const genType& g)
+// {
+//     return out << glm::to_string(g);
+// }
+// **********************************************************************
 
 
 int main( int argc, char** argv) {
@@ -41,8 +52,6 @@ int main( int argc, char** argv) {
 	window.setVerticalSyncEnabled(true);
 	window.setFramerateLimit(60);
 	window.setKeyRepeatEnabled(false);
-	
-	sf::Vector2i mouseDownPosition, mousePosition;
 
 
 	// OpenGL Options ************************************************************************************
@@ -67,33 +76,23 @@ int main( int argc, char** argv) {
 
 
 	ShaderProgram* objectPrgrm = new ShaderProgram();
-	objectPrgrm->AddVertexShader( "../src/test_vs.glsl" )
-	->AddFragmentShader( "../src/test_fs.glsl" );
-
-	/*
-	ShaderProgram* terrainPrgrm = new ShaderProgram();
-	terrainPrgrm->AddVertexShader( "../src/test_vs.glsl" )
-			    ->AddFragmentShader( "../src/test_fs.glsl" );
-	if(tesselate) terrainPrgrm->AddTesselationShaders("../src/test_fs.glsl", "../src/test_fs.glsl");
-	//*/
-	
-	
-	// objectPrgrm->SetParameter( "ProjectionViewMatrix", Camera::GetActiveCamera()->GetProjectionView() );// todo, eventually have Camera automatically/internally set CurrentProgram ProjectionViewMatrix parameter
-	// objectPrgrm->SetParameter( "ProjectionViewMatrix", Projection*View );// todo, eventually have Camera automatically/internally set CurrentProgram ProjectionViewMatrix parameter
-	objectPrgrm->SetParameter( "ProjectionViewMatrix", camera->GetProjectionView() );// todo, eventually have Camera automatically/internally set CurrentProgram ProjectionViewMatrix parameter
-
+	objectPrgrm->AddVertexShader( "../src/test.vs.glsl" )
+	->AddFragmentShader( "../src/test.fs.glsl" )
+	->SetParameter( "ProjectionViewMatrix", camera->GetProjectionView() )
+	->Begin();
 
 	// Load Object ************************************************************************************
 
 	Object* s1 = new Object( modelFilename , 01);
 
-	objectPrgrm->Begin();
 
 	// ************************************************************************************
 
+	EventHandler* eventHandler = new EventHandler();
+	eventHandler->RegisterDevice( camera ); 
+	// eventHandler->RegisterDevice( keyboard ); 
 
-	bool running = true;
-	while (running)
+	while ( !eventHandler->CloseWindow() )
 	{
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -101,53 +100,17 @@ int main( int argc, char** argv) {
 	// Event ************************************************************************************
 
 		sf::Event event;
+
 		while (window.pollEvent(event))
 		{
-
-			if (event.type == sf::Event::Closed ||
-				sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) ||
-				sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
-				running = false;
-			
-			else if (event.type == sf::Event::Resized)
-				glViewport(0, 0, event.size.width, event.size.height);	
-
-			else if( event.type == sf::Event::MouseButtonPressed &&
-                     event.mouseButton.button == sf::Mouse::Left ) 
-            {
-                mouseDownPosition.x = event.mouseButton.x;
-                mouseDownPosition.y = event.mouseButton.y;
-            }		
-
+			eventHandler->HandleActiveEvent( event );
 		}
+
+		eventHandler->HandlePassiveState( window );
+
+		objectPrgrm->SetParameter( "ProjectionViewMatrix", camera->GetProjectionView() );
 
 	// Draw ************************************************************************************
-
-		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) )
-		{
-			mousePosition = sf::Mouse::getPosition(window);
-			glm::vec3 drag = glm::vec3(
-				mousePosition.y-mouseDownPosition.y,
-				mousePosition.x-mouseDownPosition.x,
-				 0.0f);
-			GLfloat angle = glm::length(drag)==0?0:-0.01;
-
-			if( drag.x==0 && drag.y==0 ) drag = glm::vec3(0.0, 1.0, 0.0);
-
-			camera->Rotate( drag, angle, s1->GetPosition() );
-			objectPrgrm->SetParameter( "ProjectionViewMatrix", camera->GetProjectionView() );
-
-		}
-
-		if (sf::Mouse::isButtonPressed(sf::Mouse::Right) )
-		{
-			mousePosition = sf::Mouse::getPosition(window);
-			sf::Vector2i drag = mousePosition-mouseDownPosition;
-
-			camera->Move( glm::normalize( glm::vec3(-drag.x, -drag.y, 0.0)) );
-			objectPrgrm->SetParameter( "ProjectionViewMatrix", camera->GetProjectionView() );
-
-		}
 
 		s1->Move( 0.01 );
 		s1->Draw( GL_POINTS );
@@ -160,7 +123,7 @@ int main( int argc, char** argv) {
 
 	objectPrgrm->End();
 	
-
+	delete eventHandler;
 	delete objectPrgrm;
 	delete camera;
 	delete s1;

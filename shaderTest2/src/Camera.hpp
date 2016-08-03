@@ -6,11 +6,16 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <exception>
+#include <iostream>
 
 #define GLM_FORCE_RADIANS
 #define GLM_SWIZZLE // mat4.xyz()
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
+
+#include "InputDevice.hpp"
 
 enum CameraMode{
 	CAM_ORTHO,
@@ -21,7 +26,7 @@ enum CameraMode{
 	CAM_SPHERE
 };
 
-class Camera
+class Camera: public InputDevice
 {
 private:
 
@@ -29,6 +34,8 @@ private:
 	glm::vec3 _lookAt;
 	glm::mat4 _view;
 	glm::mat4 _projection;
+
+	sf::Vector2i _mouseDownPosition;
 	
 	static Camera* _currentCam;
 	
@@ -75,6 +82,48 @@ private:
 		}
 
 	}
+
+
+	void LPCallback( sf::Window& window )
+	// Left mouse button Pressed callback
+	{
+		sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+		glm::vec3 drag = glm::vec3(
+			mousePosition.y-_mouseDownPosition.y,
+			mousePosition.x-_mouseDownPosition.x,
+			 0.0f);
+		GLfloat angle = glm::length(drag)==0?0:-0.01;
+
+		if( drag.x!=0 && drag.y!=0 )
+			this->Rotate( drag, angle, _position+ _lookAt );
+
+	}
+
+	void LRCallback( void )
+	// Left mouse button Released callback
+	{}
+
+	void RPCallback( sf::Window& window )
+	// Right mouse button Pressed callback
+	{
+		sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+		sf::Vector2i drag = mousePosition-_mouseDownPosition;
+
+		if( drag.x!=0 && drag.y!=0 )
+			this->Move( glm::normalize( glm::vec3(-drag.x, -drag.y, 0.0)), true );
+	}
+
+	void RRCallback( void )
+	// Right mouse button Released callback
+	{}
+
+	void MPCallback( sf::Window& window )
+	// Middle mouse button Pressed callback
+	{}
+
+	void MRCallback( void )
+	// Middle mouse button Released callback
+	{}
 	
 	
 
@@ -92,6 +141,12 @@ public:
 		CalculateProjection();
 		
 		Use();
+
+	}
+
+	~Camera( void )
+	{
+
 	}
 	
 	Camera* Use( void )
@@ -144,11 +199,18 @@ public:
 	
 	glm::mat4 GetProjectionView( void )
 	{
-		_view = glm::lookAt( 
-			_position,
-			_lookAt,
-			glm::vec3(0.0, 0.1, 0.0) //up
-			);		
+		
+		try 
+		{
+			_view = glm::lookAt( 
+				_position, // = eye isNan
+				_lookAt,// = center
+				glm::vec3(0.0, 0.1, 0.0) //up
+				);
+		} catch( std::exception& err)
+		{
+			std::cerr<< "eye: "<<glm::to_string(_position)<<"\ncenter:  "<<glm::to_string(_lookAt)<<std::endl;
+		}
 
 		return _projection * _view;
 	}
@@ -161,10 +223,11 @@ public:
 
 	Camera* Rotate( glm::vec3 axis, GLfloat angle, glm::vec3 pivot = glm::vec3(1.0f) )
 	{
+		pivot = glm::normalize( pivot );
+
 		glm::mat4 rotation = glm::rotate( glm::mat4(1.0f), angle, glm::normalize(axis) );
-		_position = ( rotation * glm::vec4( _position-pivot, 1.0) 
-			+ glm::vec4(pivot,1.0)
-			).xyz();
+		// _position = ( rotation * glm::vec4( _position-pivot, 1.0) + glm::vec4(pivot,1.0) ).xyz();
+		_position = glm::vec3( rotation * glm::vec4( _position-pivot, 1.0) + glm::vec4(pivot,1.0) );
 
 		return this;
 	}
@@ -177,6 +240,35 @@ public:
 		return this;
 	}
 
+	Camera* HandleActiveEvent( sf::Event& event)
+	{
+
+		if(event.mouseButton.button == sf::Mouse::Left ||
+        	event.mouseButton.button == sf::Mouse::Right ) 
+	    {
+	    	_mouseDownPosition.x = event.mouseButton.x;
+	        _mouseDownPosition.y = event.mouseButton.y;
+		}
+
+	    else if( event.type == sf::Event::MouseWheelMoved )
+	    {
+	    	std::cout<< "delta :"<< event.mouseWheel.delta << std::endl;
+	    	Zoom( 5*event.mouseWheel.delta );
+	    }
+
+	    return this;
+	}
+
+	Camera* HandlePassiveState( sf::Window& window)
+	{
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) ) LPCallback( window );
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Right) ) RPCallback( window );
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Middle) ) MPCallback( window );
+
+		return this;
+
+	}
+
 
 // Camera* Camera::AttachToObject(Object* o, vec3 offset=vec3(0.0f) )
 // {
@@ -187,6 +279,5 @@ public:
 };
 
 
-Camera* Camera::_currentCam = NULL;
 
 #endif

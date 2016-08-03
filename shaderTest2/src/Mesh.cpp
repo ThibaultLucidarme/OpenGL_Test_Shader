@@ -1,5 +1,7 @@
 
 #include "Mesh.hpp"
+
+#include "ShaderProgram.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
@@ -186,6 +188,31 @@ void Mesh::LoadOBJFromFile( string filename )
 
 	fclose( file );
 }
+
+
+
+	Mesh* Mesh::Normalize( void )
+	{
+		this->Scale (1.0,1.0,1.0);
+	}
+
+	Mesh* Mesh::Scale( float x, float y, float z )
+	{
+		this->
+	}
+
+	float BoundingBox::MaximumDimension( void )
+	{
+		float max = _vertices[0].x
+		for (it = _vertices.begin(); it != _vertices.end(); ++it)
+		{
+			max = (it->x > max)? it->x : max;
+			max = (it->y > max)? it->y : max;
+			max = (it->z > max)? it->z : max;
+		}
+
+		return max;
+	}
 
 
 

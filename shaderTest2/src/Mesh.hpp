@@ -6,7 +6,6 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include "ShaderProgram.hpp"
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -16,6 +15,28 @@
 #define MESH_DYNAMIC true
 #define MESH_STATIC false
 
+class BoundingBox
+{
+private:
+
+	BoundingBox( Mesh* )
+	virtual float MaximumDimension ()
+};
+
+class EllipticalBB: public BoundingBox
+{
+
+};
+
+class RectangularBB: public BoundingBox
+{
+
+};
+
+class AABB: public RectangularBB
+{
+
+};
 
 class Mesh
 {
@@ -56,6 +77,8 @@ public:
 	void LoadOBJFromFile( std::string file );
 	void Draw( GLenum mode = GL_TRIANGLES, GLfloat rasterSize = 1.0 );
 	Mesh* Move( glm::mat4 ModelMatrix );
+	Mesh* Normalize( void );
+	Mesh* Scale( float, float, float );
 	
 };
 
