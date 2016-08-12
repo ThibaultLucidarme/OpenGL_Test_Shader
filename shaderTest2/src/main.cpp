@@ -113,7 +113,7 @@ int main( int argc, char** argv) {
 	// Draw ************************************************************************************
 
 		s1->Move( 0.01 );
-		s1->Draw( GL_POINTS );
+		s1->Draw( GL_POINTS ); //GL_PATCHES for tessellation
 
 		// update buffer
 		window.display();
