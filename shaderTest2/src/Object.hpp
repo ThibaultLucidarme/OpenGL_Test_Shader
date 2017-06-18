@@ -29,7 +29,7 @@ public:
 
 	Object( void );
 	~Object( void );
-	void Object( std::string filename, GLfloat scale = 1.0f );
+	Object( std::string filename, GLfloat scale = 1.0f );
 	Object* AttachMesh( Mesh* mesh );
 	Object* Move( GLfloat qtty );
 	Object* Draw( GLenum mode = GL_TRIANGLES, GLfloat rasterSize = 1.0 );

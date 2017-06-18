@@ -21,18 +21,22 @@ void EventHandler::RegisterDevice( InputDevice* device )
 void EventHandler::HandleActiveEvent( sf::Event& event )
 {
 
+	// Close
 	if (event.type == sf::Event::Closed ||
 		sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) ||
 		sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 		_close = true;
-			
+
+	// Resize			
 	else if (event.type == sf::Event::Resized)
 		glViewport(0, 0, event.size.width, event.size.height);	
 
+	// Keyboard
     else if( event.type == sf::Event::KeyPressed ||
     		event.type == sf::Event::KeyReleased )
     	{/* _keyboard -> HandleActiveEvent( event );*/}
 
+    // Mouse (camera)
     else if( event.type == sf::Event::MouseButtonPressed ||
     		event.type == sf::Event::MouseButtonReleased ||
     		event.type == sf::Event::MouseWheelMoved ||
@@ -49,4 +53,5 @@ bool EventHandler::CloseWindow( void )
 void EventHandler::HandlePassiveState( sf::Window& window )
 {
 	_camera -> HandlePassiveState( window );
+	/* _keyboard -> HandlePassiveState( event );*/
 } 

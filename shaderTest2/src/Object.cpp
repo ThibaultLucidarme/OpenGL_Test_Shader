@@ -1,17 +1,17 @@
 #include "Object.hpp"
+#include <iostream>
 
 Object::Object( void )
 {
 		//If there is a single scalar parameter to a matrix constructor, it is used to initialize all the components on the matrix's diagonal, with the remaining components initialized to 0.0f
-
 }
 
-~Object::Object( void )
+Object::~Object( void )
 {
 	delete _mesh;
 }
 
-void Object::Object( std::string filename, GLfloat scale = 1.0f ) : Object()
+Object::Object( std::string filename, GLfloat scale) : Object()
 {
 	_model = glm::scale(glm::mat4( 1.0f ), glm::vec3(scale) );
 	AttachMesh( new Mesh( filename ) );
@@ -37,7 +37,7 @@ Object* Object::Move( GLfloat qtty )
 	return this;
 }
 
-Object* Object::Draw( GLenum mode = GL_TRIANGLES, GLfloat rasterSize = 1.0 )
+Object* Object::Draw( GLenum mode, GLfloat rasterSize )
 {
 		// calculate ViewProjection matrix
 	_mesh->Move( _model );

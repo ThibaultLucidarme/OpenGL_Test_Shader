@@ -45,8 +45,10 @@ private:
 	void LoadArray( GLuint* vbo, std::vector<glm::vec3>* array, std::string varName);
 	void LoadToGPU( bool useTexture = false );
 
+	float top, right, bot, left, front, back;
 
 public:
+	glm::vec3 _center_gravity;
 
 	Mesh( void );
 	Mesh( std::string filename );

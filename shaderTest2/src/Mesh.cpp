@@ -3,7 +3,9 @@
 
 #include "ShaderProgram.hpp"
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/ext.hpp> // print glm
 #include <iostream>
+#include <algorithm>
 
 
 using namespace std;
@@ -123,6 +125,9 @@ void Mesh::LoadOBJFromFile( string filename )
 	std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
 	std::vector< glm::vec3 > temp_vertices, temp_normals;
 	std::vector< glm::vec2 > temp_uvs;	
+	
+	_center_gravity = glm::vec3(0,0,0);
+	top=-9999, right=-9999, bot=9999, left=9999, front=9999, back = -9999;
 
 
 	while( !feof( file ) )	
@@ -182,9 +187,34 @@ void Mesh::LoadOBJFromFile( string filename )
 
 
 	// indexing
-	for( unsigned int i=0; i<vertexIndices.size(); i++ ) _vertices.push_back( temp_vertices[ vertexIndices[i] ] );
-	for( unsigned int i=0; i<normalIndices.size(); i++ ) _normals.push_back(  temp_normals[ normalIndices[i] ] );
-	for( unsigned int i=0; i<uvIndices.size(); i++ )	 _uv.push_back( 	  temp_uvs[ uvIndices[i] ] );
+	for_each( vertexIndices.begin(), vertexIndices.end(), [&](unsigned int vertexIndex)
+		{
+			_vertices.push_back( temp_vertices[ vertexIndex ] );
+			_center_gravity += temp_vertices[ vertexIndex ];
+
+			if (temp_vertices[ vertexIndex ].x>right) right = temp_vertices[ vertexIndex ].x;
+			if (temp_vertices[ vertexIndex ].x<left) left = temp_vertices[ vertexIndex ].x;
+			if (temp_vertices[ vertexIndex ].y>top) top = temp_vertices[ vertexIndex ].y;
+			if (temp_vertices[ vertexIndex ].y<bot) bot = temp_vertices[ vertexIndex ].y;
+			if (temp_vertices[ vertexIndex ].z>back) back = temp_vertices[ vertexIndex ].z;
+			if (temp_vertices[ vertexIndex ].z<front) front = temp_vertices[ vertexIndex ].z;
+		});
+	for_each( normalIndices.begin(), normalIndices.end(), [&](unsigned int normalIndex)
+		{
+			_normals.push_back(  temp_normals[ normalIndex ] );
+		});
+	
+	for_each( uvIndices.begin(), uvIndices.end(), [&](unsigned int uvIndex)
+		{
+			_uv.push_back(  temp_uvs[ uvIndex ] );
+		});
+
+
+	if(_vertices.size()) _center_gravity /= _vertices.size();
+	cout<< glm::to_string(_center_gravity) <<endl;
+
+	Normalize();
+
 
 	fclose( file );
 }
@@ -193,26 +223,24 @@ void Mesh::LoadOBJFromFile( string filename )
 
 	Mesh* Mesh::Normalize( void )
 	{
-		this->Scale (1.0,1.0,1.0);
+		cerr<<"Normalize"<<endl;
+
+		//TODO
+		glm::vec3 center = 0.5*glm::vec3(right+left, top+bot, front+back);
+		glm::vec3 scale = glm::vec3(right-left, top-bot, back-front);
+
+		for_each( _vertices.begin(), _vertices.end(), [&](glm::vec3 vertex) { 
+			vertex -= center; 
+			vertex *= scale;
+		});
+
+		return this;
 	}
 
 	Mesh* Mesh::Scale( float x, float y, float z )
 	{
-		this->
+		// TODO
+		return this;
 	}
-
-	float BoundingBox::MaximumDimension( void )
-	{
-		float max = _vertices[0].x
-		for (it = _vertices.begin(); it != _vertices.end(); ++it)
-		{
-			max = (it->x > max)? it->x : max;
-			max = (it->y > max)? it->y : max;
-			max = (it->z > max)? it->z : max;
-		}
-
-		return max;
-	}
-
 
 

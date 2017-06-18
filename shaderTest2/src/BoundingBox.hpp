@@ -9,8 +9,21 @@ class BoundingBox
 protected:
 
 	BoundingBox( Mesh* );
-	virtual float MaximumDimension ();
+	virtual float MaximumDimension ()
+	{
+		float max = _vertices[0].x
+		for (it = _vertices.begin(); it != _vertices.end(); ++it)
+		{
+			max = (it->x > max)? it->x : max;
+			max = (it->y > max)? it->y : max;
+			max = (it->z > max)? it->z : max;
+		}
+
+		return max;
+	}
+
 	virtual bool isColliding ( BoundingBox* );
+
 };
 
 class EllipsoidalBB: public BoundingBox

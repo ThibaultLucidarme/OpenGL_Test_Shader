@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "CommandLineParser.hpp"
-#include "Mesh.hpp"
+#include "Object.hpp"
 #include "ShaderProgram.hpp"
 #include "EventHandler.hpp"
 #include "Camera.hpp"
@@ -41,13 +41,17 @@ int main( int argc, char** argv) {
 	// Init ************************************************************************************
 
 	sf::ContextSettings glSettings;
-	glSettings.majorVersion = 4;
-	glSettings.minorVersion = 4;
+	glSettings.depthBits = 0;
+	glSettings.stencilBits = 0;
+	glSettings.antialiasingLevel = 0;
+	glSettings.majorVersion = 2;
+	glSettings.minorVersion = 0;
 
 	sf::RenderWindow window(sf::VideoMode(size, size), 
 		"Viewer3d -- SFML / OpenGL Shader", 
-		sf::Style::Titlebar|sf::Style::Resize|sf::Style::Close,
-		glSettings );
+		sf::Style::Titlebar|sf::Style::Resize|sf::Style::Close
+		// ,glSettings 
+		);
 
 	window.setVerticalSyncEnabled(true);
 	window.setFramerateLimit(60);
@@ -83,7 +87,7 @@ int main( int argc, char** argv) {
 
 	// Load Object ************************************************************************************
 
-	Object* s1 = new Object( modelFilename , 01);
+	Object* s1 = new Object( modelFilename , 0.01);
 
 
 	// ************************************************************************************
